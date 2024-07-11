@@ -150,19 +150,17 @@ tApiError search_date(tApiData* data, tDateTime date, const char* document, tCoo
         //check that the new node is the last one
         if (!aux) {
             prev->next = temporal_node;
-            return E_SUCCESS;
         } else {
             //check that the new node is the first one
             if (!prev) {
                 temporal_node->next = data->temporal_node;
                 data->temporal_node = temporal_node;
-                return E_SUCCESS;
             } else {
                 prev->next = temporal_node;
                 temporal_node->next = aux;
-                return E_SUCCESS;
             }
         }
+        return E_SUCCESS;
     } else {
         return E_MEMORY_ERROR;
     }
