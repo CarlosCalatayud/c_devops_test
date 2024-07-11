@@ -245,23 +245,3 @@ void temporalNode_getCoordinates(tTemporalNode* node, tListCoordinates* list) {
         }
     }
 }
-
-void temporalNode_getPersons(tTemporalNode* node, tListDocuments* list) {
-    if (node) {
-        tCoordinateNode* aux = node->coordinateNode;
-        while (aux) {
-            char** persons = aux->persons;
-            for (int i = 0; i < aux->numPersons; i++) {
-                if (list->numDocuments == 0) {
-                    list->documents = (char**)malloc(sizeof(char*));
-                } else {
-                    list->documents = (char**)realloc(list->documents, (list->numDocuments + 1) * sizeof(char*));
-                }
-                list->documents[list->numDocuments] = (char*)malloc((strlen(persons[i]) + 1) * sizeof(char));
-                strcpy(list->documents[list->numDocuments], persons[i]);
-                list->numDocuments++;
-            }
-            aux = aux->next;
-        }
-    }
-}
