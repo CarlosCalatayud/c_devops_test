@@ -124,6 +124,50 @@ tApiError api_loadData(tApiData* data, const char* filename, bool reset) {
     }
 }
 
+tApiError search_date(tApiData* data, tDateTime date, const char* document, tCoordinate coordinate)
+{
+    
+    // If the list is not empty, search for the date in the linked list
+    tTemporalNode* aux = data->temporal_node;
+    tTemporalNode* prev = NULL;
+    while (aux && temporalNode_cmpDate(aux, date) <= 0) {
+        if (temporalNode_cmpDate(aux, date) == 0) {
+            temporalNode_addPersonCoordinate(aux, coordinate, document);
+            return E_SUCCESS;
+        }
+        prev = aux;
+        aux = aux->next;
+    }
+
+    // If the date is not found, create a new temporal node and add it between the previous and the next node
+    tTemporalNode* temporal_node = (tTemporalNode*) malloc(sizeof(tTemporalNode));
+    if (temporal_node) {
+        temporalNode_init(temporal_node);
+        temporal_node->date = date;
+        temporalNode_addPersonCoordinate(temporal_node, coordinate, document);
+        
+        data->numNodes++;
+        //check that the new node is the last one
+        if (!aux) {
+            prev->next = temporal_node;
+            return E_SUCCESS;
+        } else {
+            //check that the new node is the first one
+            if (!prev) {
+                temporal_node->next = data->temporal_node;
+                data->temporal_node = temporal_node;
+                return E_SUCCESS;
+            } else {
+                prev->next = temporal_node;
+                temporal_node->next = aux;
+                return E_SUCCESS;
+            }
+        }
+    } else {
+        return E_MEMORY_ERROR;
+    }
+}
+
 tApiError api_add_person_geolocation(tApiData* data, tDateTime date, const char* document, tCoordinate coordinate) {
 
     if (data) {
@@ -144,45 +188,7 @@ tApiError api_add_person_geolocation(tApiData* data, tDateTime date, const char*
                     return E_MEMORY_ERROR;
                 }
             } else {
-                // If the list is not empty, search for the date in the linked list
-                tTemporalNode* aux = data->temporal_node;
-                tTemporalNode* prev = NULL;
-                while (aux && temporalNode_cmpDate(aux, date) <= 0) {
-                    if (temporalNode_cmpDate(aux, date) == 0) {
-                        temporalNode_addPersonCoordinate(aux, coordinate, document);
-                        return E_SUCCESS;
-                    }
-                    prev = aux;
-                    aux = aux->next;
-                }
-
-                // If the date is not found, create a new temporal node and add it between the previous and the next node
-                tTemporalNode* temporal_node = (tTemporalNode*) malloc(sizeof(tTemporalNode));
-                if (temporal_node) {
-                    temporalNode_init(temporal_node);
-                    temporal_node->date = date;
-                    temporalNode_addPersonCoordinate(temporal_node, coordinate, document);
-                    
-                    data->numNodes++;
-                    //check that the new node is the last one
-                    if (!aux) {
-                        prev->next = temporal_node;
-                        return E_SUCCESS;
-                    } else {
-                        //check that the new node is the first one
-                        if (!prev) {
-                            temporal_node->next = data->temporal_node;
-                            data->temporal_node = temporal_node;
-                            return E_SUCCESS;
-                        } else {
-                            prev->next = temporal_node;
-                            temporal_node->next = aux;
-                            return E_SUCCESS;
-                        }
-                    }
-                } else {
-                    return E_MEMORY_ERROR;
-                }
+                return search_date( data,  date,  document, coordinate);
             }
         } else {
             return E_PERSON_NOT_FOUND;
