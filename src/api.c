@@ -124,20 +124,9 @@ tApiError api_loadData(tApiData* data, const char* filename, bool reset) {
     }
 }
 
-tApiError search_date(tApiData* data, tDateTime date, const char* document, tCoordinate coordinate)
+tApiError search_date(tApiData* data, tDateTime date, const char* document, tCoordinate coordinate, tTemporalNode* aux,tTemporalNode* prev)
 {
     
-    // If the list is not empty, search for the date in the linked list
-    tTemporalNode* aux = data->temporal_node;
-    tTemporalNode* prev = NULL;
-    while (aux && temporalNode_cmpDate(aux, date) <= 0) {
-        if (temporalNode_cmpDate(aux, date) == 0) {
-            temporalNode_addPersonCoordinate(aux, coordinate, document);
-            return E_SUCCESS;
-        }
-        prev = aux;
-        aux = aux->next;
-    }
 
     // If the date is not found, create a new temporal node and add it between the previous and the next node
     tTemporalNode* temporal_node = (tTemporalNode*) malloc(sizeof(tTemporalNode));
@@ -186,7 +175,17 @@ tApiError api_add_person_geolocation(tApiData* data, tDateTime date, const char*
                     return E_MEMORY_ERROR;
                 }
             } else {
-                return search_date( data,  date,  document, coordinate);
+                tTemporalNode* aux = data->temporal_node;
+                tTemporalNode* prev = NULL;
+                while (aux && temporalNode_cmpDate(aux, date) <= 0) {
+                    if (temporalNode_cmpDate(aux, date) == 0) {
+                        temporalNode_addPersonCoordinate(aux, coordinate, document);
+                        return E_SUCCESS;
+                    }
+                    prev = aux;
+                    aux = aux->next;
+                }
+                return search_date( data,  date,  document, coordinate, aux, prev);
             }
         } else {
             return E_PERSON_NOT_FOUND;
